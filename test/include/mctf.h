@@ -204,9 +204,7 @@ mctf_format_error(const char* format, ...);
  * timeout: MCTF_TEST(name) runs under MCTF_DEFAULT_TIMEOUT_SECONDS, while
  * MCTF_TEST(name, secs) sets an explicit wall-clock budget for tests that
  * legitimately run longer. */
-#define MCTF_TEST(...) MCTF_TEST_SELECT(__VA_ARGS__, \
-                                        MCTF_TEST_WITH_TIMEOUT, MCTF_TEST_DEFAULT)(__VA_ARGS__)
-
+#define MCTF_TEST(...) MCTF_TEST_SELECT(__VA_ARGS__, MCTF_TEST_WITH_TIMEOUT, MCTF_TEST_DEFAULT)(__VA_ARGS__)
 /* Test registration macro without any timeout. An explicit opt-out for tests
  * whose duration is unbounded by design; a hang in such a test stalls the run
  * until the CI job timeout, so prefer MCTF_TEST(name, secs) where possible. */
