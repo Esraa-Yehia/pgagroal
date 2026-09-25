@@ -172,8 +172,10 @@ mctf_analyze_and_write_test_log_slice(const char* module,
    FILE* src = NULL;
    FILE* dst = NULL;
    char line[4096];
-   char summary[1536];
-   size_t used = 0;
+   char error_summary[1536];
+   size_t error_used = 0;
+   char warn_summary[1536];
+   size_t warn_used = 0;
    bool has_error = false;
    char* slash = NULL;
 
@@ -244,7 +246,8 @@ mctf_analyze_and_write_test_log_slice(const char* module,
       return;
    }
 
-   summary[0] = '\0';
+   error_summary[0] = '\0';
+   warn_summary[0] = '\0';
 
    while (true)
    {
@@ -273,10 +276,21 @@ mctf_analyze_and_write_test_log_slice(const char* module,
          has_error = true;
          if (out_error_summary != NULL)
          {
-            int n = snprintf(summary + used, sizeof(summary) - used, "      %s", line);
-            if (n > 0 && (size_t)n < (sizeof(summary) - used))
+            int n = snprintf(error_summary + error_used, sizeof(error_summary) - error_used, "      %s", line);
+            if (n > 0 && (size_t)n < (sizeof(error_summary) - error_used))
             {
-               used += (size_t)n;
+               error_used += (size_t)n;
+            }
+         }
+      }
+      else if (strstr(line, " WARN") != NULL)
+      {
+         if (out_error_summary != NULL)
+         {
+            int n = snprintf(warn_summary + warn_used, sizeof(warn_summary) - warn_used, "      %s", line);
+            if (n > 0 && (size_t)n < (sizeof(warn_summary) - warn_used))
+            {
+               warn_used += (size_t)n;
             }
          }
       }
@@ -292,13 +306,32 @@ mctf_analyze_and_write_test_log_slice(const char* module,
 
    if (out_error_summary != NULL && has_error)
    {
-      const char* header = "Unexpected ERROR lines in pgagroal.log:\n";
-      size_t total = strlen(header) + strlen(summary) + 1;
+      const char* log_errors_header = "Log errors:\n";
+      const char* errors_header = "    Errors:\n";
+      const char* warnings_header = "    Warnings:\n";
+
+      size_t total = strlen(log_errors_header) + strlen(errors_header) + strlen(error_summary) + 1;
+      if (warn_used > 0)
+      {
+         total += strlen(warnings_header) + strlen(warn_summary);
+      }
 
       *out_error_summary = calloc(total, sizeof(char));
       if (*out_error_summary != NULL)
       {
-         snprintf(*out_error_summary, total, "%s%s", header, summary);
+         if (warn_used > 0)
+         {
+            snprintf(*out_error_summary, total, "%s%s%s%s%s",
+                     log_errors_header,
+                     errors_header, error_summary,
+                     warnings_header, warn_summary);
+         }
+         else
+         {
+            snprintf(*out_error_summary, total, "%s%s%s",
+                     log_errors_header,
+                     errors_header, error_summary);
+         }
       }
    }
 }

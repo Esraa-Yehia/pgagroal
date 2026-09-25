@@ -595,7 +595,7 @@ mctf_run_tests(mctf_filter_type_t filter_type, const char* filter)
          if (has_log_errors && !test->is_negative)
          {
             result->passed = false;
-            result->error_message = log_error_summary != NULL ? log_error_summary : strdup("Unexpected ERROR lines in pgagroal.log");
+            result->error_message = log_error_summary != NULL ? log_error_summary : strdup("Log errors detected in pgagroal.log");
             g_runner.failed_count++;
             mctf_logf("  %s (%02ld:%02ld:%02ld,%03ld) [FAIL]\n",
                       test->name, hours, minutes, seconds, milliseconds);
